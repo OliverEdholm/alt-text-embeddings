@@ -1,6 +1,7 @@
 import io
 
 import numpy as np
+from tqdm import tqdm
 
 from src.sanity_check import is_valid
 from src.text_processing import WordExtractor
@@ -18,10 +19,18 @@ def load_vectors(fname):
 
 
 class MeanWordEmbeddingExtractor:
-    def __init__(self):
-        self._word_vectors = load_vectors('data/crawl-300d-2M.vec')
+    def __init__(self, word_vectors_path):
+        self._word_vectors = load_vectors(word_vectors_path)
         self._word_extractor = WordExtractor()
     
     def extract(self, text):
-        return np.mean([word_vectors.get(word, np.zeros(300)) 
-                        for word in word_extractor.extract(alt_text)], axis=0)
+        relevant_word_vectors = []
+        for word in self._word_extractor.extract(text):
+            if self._word_vectors.get(word) is not None:
+                relevant_word_vectors.append(
+                    self._word_vectors[word])
+    
+        if relevant_word_vectors:
+            return np.mean(relevant_word_vectors, axis=0)
+        else:
+            return self._word_vectors['icon']
